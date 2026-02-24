@@ -9,7 +9,7 @@ struct User
     int id;
     char username[30];
     char password[30];
-    int role;   // 1 Worker 2 Finance 3 Admin
+    int role; // 1 Worker 2 Finance 3 Admin
 };
 
 struct Product
@@ -30,7 +30,7 @@ struct CustomerOrder
     char productName[50];
     int quantity;
     int priority;
-    int status;   // 0 Pending 1 Approved 2 Paid -1 Rejected
+    int status; // 0 Pending 1 Approved 2 Paid 3 Completed -1 Rejected
     float price;
     struct CustomerOrder *next;
 };
@@ -38,46 +38,46 @@ struct CustomerOrder
 /* ================= GLOBAL ================= */
 
 struct User users[50];
-int userCount=0;
+int userCount = 0;
 
-struct User *currentUser=NULL;
+struct User *currentUser = NULL;
 
-struct Product *productHead=NULL;
-struct CustomerOrder *orderHead=NULL;
+struct Product *productHead = NULL;
+struct CustomerOrder *orderHead = NULL;
 
-int userCounter=1;
-int productCounter=1001;
-int orderCounter=1;
+int userCounter = 1;
+int productCounter = 1001;
+int orderCounter = 1;
 
 /* ================= ADMIN ================= */
 
 void initializeAdmin()
 {
-    users[0].id=userCounter++;
-    strcpy(users[0].username,"admin");
-    strcpy(users[0].password,"admin123");
-    users[0].role=3;
-    userCount=1;
+    users[0].id = userCounter++;
+    strcpy(users[0].username, "admin");
+    strcpy(users[0].password, "admin123");
+    users[0].role = 3;
+    userCount = 1;
 }
 
 /* ================= LOGIN ================= */
 
 int login()
 {
-    char u[30],p[30];
+    char u[30], p[30];
 
     printf("Username: ");
-    scanf("%s",u);
+    scanf("%s", u);
 
     printf("Password: ");
-    scanf("%s",p);
+    scanf("%s", p);
 
-    for(int i=0;i<userCount;i++)
+    for (int i = 0; i < userCount; i++)
     {
-        if(!strcmp(users[i].username,u) &&
-           !strcmp(users[i].password,p))
+        if (!strcmp(users[i].username, u) &&
+            !strcmp(users[i].password, p))
         {
-            currentUser=&users[i];
+            currentUser = &users[i];
             return 1;
         }
     }
@@ -92,58 +92,58 @@ void registerUser()
 {
     struct User u;
 
-    u.id=userCounter++;
+    u.id = userCounter++;
 
     printf("Username: ");
-    scanf("%s",u.username);
+    scanf("%s", u.username);
 
     printf("Password: ");
-    scanf("%s",u.password);
+    scanf("%s", u.password);
 
     printf("Role (1 Worker 2 Finance 3 Admin): ");
-    scanf("%d",&u.role);
+    scanf("%d", &u.role);
 
-    users[userCount++]=u;
+    users[userCount++] = u;
 
-    printf("User Registered ID=%d\n",u.id);
+    printf("User Registered ID=%d\n", u.id);
 }
 
 /* ================= PRODUCT ================= */
 
 void addProduct()
 {
-    struct Product *p=malloc(sizeof(struct Product));
+    struct Product *p = malloc(sizeof(struct Product));
 
-    p->id=productCounter++;
+    p->id = productCounter++;
 
     printf("Product Name: ");
-    scanf("%s",p->name);
+    scanf("%s", p->name);
 
     printf("Category: ");
-    scanf("%s",p->category);
+    scanf("%s", p->category);
 
     printf("Stock: ");
-    scanf("%d",&p->stock);
+    scanf("%d", &p->stock);
 
     printf("Price: ");
-    scanf("%f",&p->price);
+    scanf("%f", &p->price);
 
-    p->next=productHead;
-    productHead=p;
+    p->next = productHead;
+    productHead = p;
 
-    printf("Product Added ID=%d\n",p->id);
+    printf("Product Added ID=%d\n", p->id);
 }
 
 struct Product *findProduct(char name[])
 {
-    struct Product *t=productHead;
+    struct Product *t = productHead;
 
-    while(t)
+    while (t)
     {
-        if(!strcmp(t->name,name))
+        if (!strcmp(t->name, name))
             return t;
 
-        t=t->next;
+        t = t->next;
     }
 
     return NULL;
@@ -151,20 +151,20 @@ struct Product *findProduct(char name[])
 
 void viewProducts()
 {
-    struct Product *t=productHead;
+    struct Product *t = productHead;
 
-    if(!t)
+    if (!t)
     {
         printf("No Products\n");
         return;
     }
 
-    while(t)
+    while (t)
     {
         printf("Name:%s Category:%s Stock:%d Price:%.2f\n",
-               t->name,t->category,t->stock,t->price);
+               t->name, t->category, t->stock, t->price);
 
-        t=t->next;
+        t = t->next;
     }
 }
 
@@ -172,61 +172,148 @@ void viewProducts()
 
 void addCustomerOrder()
 {
-    struct CustomerOrder *o=
+    struct CustomerOrder *o =
         malloc(sizeof(struct CustomerOrder));
 
-    o->id=orderCounter++;
+    o->id = orderCounter++;
 
     printf("Customer Name: ");
-    scanf("%s",o->customerName);
+    scanf("%s", o->customerName);
 
     printf("Phone: ");
-    scanf("%s",o->phone);
+    scanf("%s", o->phone);
 
     printf("Product Name: ");
-    scanf("%s",o->productName);
+    scanf("%s", o->productName);
 
-    struct Product *p=
+    struct Product *p =
         findProduct(o->productName);
 
-    if(!p)
+    if (!p)
     {
         printf("Product Not Found\n");
         return;
     }
 
     printf("Quantity: ");
-    scanf("%d",&o->quantity);
+    scanf("%d", &o->quantity);
 
-    if(p->stock < o->quantity)
+    if (p->stock < o->quantity)
     {
         printf("Stock Safety Protection\n");
         return;
     }
 
     printf("Priority (1 VIP 2 Normal): ");
-    scanf("%d",&o->priority);
+    scanf("%d", &o->priority);
 
-    o->price=p->price;
-    o->status=0;
+    o->price = p->price;
+    o->status = 0;
 
-    o->next=orderHead;
-    orderHead=o;
+    /* Insert order: VIP (priority==1) go to front, normal go to tail (FIFO) */
+    o->next = NULL;
 
-    printf("Order Sent To Finance ID=%d\n",o->id);
+    if (o->priority == 1)
+    {
+        /* VIP: insert at head */
+        o->next = orderHead;
+        orderHead = o;
+    }
+    else
+    {
+        /* Normal: insert at tail to preserve FIFO */
+        if (orderHead == NULL)
+        {
+            orderHead = o;
+        }
+        else
+        {
+            struct CustomerOrder *t = orderHead;
+            while (t->next)
+                t = t->next;
+            t->next = o;
+        }
+    }
+
+    printf("Order Sent To Finance ID=%d\n", o->id);
+}
+
+/* Worker processes a completed/paid order and reduces product stock */
+void workerProcessOrder()
+{
+    int id;
+
+    printf("Order ID to process: ");
+    scanf("%d", &id);
+
+    struct CustomerOrder *t = orderHead;
+    struct CustomerOrder *prev = NULL;
+
+    while (t)
+    {
+        if (t->id == id)
+        {
+            if (t->status == 2 || t->status == 1)
+            {
+                struct Product *p = findProduct(t->productName);
+                if (!p)
+                {
+                    printf("Product Not Found in inventory\n");
+                    return;
+                }
+
+                if (p->stock < t->quantity)
+                {
+                    printf("Insufficient stock to complete order\n");
+                    return;
+                }
+
+                p->stock -= t->quantity;
+                /* remove order from list */
+                if (prev == NULL)
+                    orderHead = t->next;
+                else
+                    prev->next = t->next;
+
+                printf("Order %d processed and stock reduced.\n", t->id);
+                free(t);
+                return;
+            }
+            else if (t->status == 0)
+            {
+                printf("Order is still pending approval/payment\n");
+                return;
+            }
+            else if (t->status == -1)
+            {
+                printf("Order was rejected and cannot be processed\n");
+                return;
+            }
+            else if (t->status == 3)
+            {
+                printf("Order already completed\n");
+                return;
+            }
+        }
+
+        prev = t;
+        t = t->next;
+    }
+
+    printf("Order Not Found\n");
 }
 
 void workerViewOrders()
 {
-    struct CustomerOrder *t=orderHead;
+    struct CustomerOrder *t = orderHead;
 
-    if(!t)
+    if (!t)
     {
         printf("No Orders\n");
         return;
     }
 
-    while(t)
+    while (t)
     {
         printf("OrderID:%d Customer:%s Product:%s Qty:%d Status:",
                t->id,
@@ -234,14 +321,20 @@ void workerViewOrders()
                t->productName,
                t->quantity);
 
-        if(t->status==0) printf("Pending");
-        else if(t->status==1) printf("Approved");
-        else if(t->status==2) printf("Paid");
-        else if(t->status==-1) printf("Rejected");
+        if (t->status == 0)
+            printf("Pending");
+        else if (t->status == 1)
+            printf("Approved");
+        else if (t->status == 2)
+            printf("Paid");
+        else if (t->status == 3)
+            printf("Completed");
+        else if (t->status == -1)
+            printf("Rejected");
 
         printf("\n");
 
-        t=t->next;
+        t = t->next;
     }
 }
 
@@ -252,20 +345,20 @@ void approveOrder()
     int id;
 
     printf("Order ID: ");
-    scanf("%d",&id);
+    scanf("%d", &id);
 
-    struct CustomerOrder *t=orderHead;
+    struct CustomerOrder *t = orderHead;
 
-    while(t)
+    while (t)
     {
-        if(t->id==id && t->status==0)
+        if (t->id == id && t->status == 0)
         {
-            t->status=1;
+            t->status = 1;
             printf("Order Approved\n");
             return;
         }
 
-        t=t->next;
+        t = t->next;
     }
 
     printf("Order Not Found\n");
@@ -276,20 +369,20 @@ void rejectOrder()
     int id;
 
     printf("Order ID: ");
-    scanf("%d",&id);
+    scanf("%d", &id);
 
-    struct CustomerOrder *t=orderHead;
+    struct CustomerOrder *t = orderHead;
 
-    while(t)
+    while (t)
     {
-        if(t->id==id && t->status==0)
+        if (t->id == id && t->status == 0)
         {
-            t->status=-1;
+            t->status = -1;
             printf("Order Rejected\n");
             return;
         }
 
-        t=t->next;
+        t = t->next;
     }
 }
 
@@ -298,20 +391,20 @@ void makePayment()
     int id;
 
     printf("Order ID: ");
-    scanf("%d",&id);
+    scanf("%d", &id);
 
-    struct CustomerOrder *t=orderHead;
+    struct CustomerOrder *t = orderHead;
 
-    while(t)
+    while (t)
     {
-        if(t->id==id && t->status==1)
+        if (t->id == id && t->status == 1)
         {
-            t->status=2;
+            t->status = 2;
             printf("Payment Pipeline Completed\n");
             return;
         }
 
-        t=t->next;
+        t = t->next;
     }
 
     printf("Payment Failed\n");
@@ -330,20 +423,22 @@ int main()
 
     int choice;
 
-    while(1)
+    while (1)
     {
         printf("\n1.Login 2.Exit\nChoice: ");
-        scanf("%d",&choice);
+        scanf("%d", &choice);
 
-        if(choice==2) exit(0);
+        if (choice == 2)
+            exit(0);
 
-        if(!login()) continue;
+        if (!login())
+            continue;
 
         /* ADMIN */
 
-        if(currentUser->role==3)
+        if (currentUser->role == 3)
         {
-            while(1)
+            while (1)
             {
                 printf("\nADMIN MENU\n");
                 printf("1.Register User\n");
@@ -351,43 +446,54 @@ int main()
                 printf("3.View Products\n");
                 printf("4.Logout\nChoice: ");
 
-                scanf("%d",&choice);
+                scanf("%d", &choice);
 
-                if(choice==4) break;
+                if (choice == 4)
+                    break;
 
-                if(choice==1) registerUser();
-                if(choice==2) addProduct();
-                if(choice==3) viewProducts();
+                if (choice == 1)
+                    registerUser();
+                if (choice == 2)
+                    addProduct();
+                if (choice == 3)
+                    viewProducts();
             }
         }
 
         /* WORKER */
 
-        else if(currentUser->role==1)
+        else if (currentUser->role == 1)
         {
-            while(1)
+            while (1)
             {
                 printf("\nWORKER MENU\n");
                 printf("1.Add Customer Order\n");
                 printf("2.View Orders\n");
                 printf("3.View Products\n");
-                printf("4.Logout\nChoice: ");
+                printf("4.Process Order\n");
+                printf("5.Logout\nChoice: ");
 
-                scanf("%d",&choice);
+                scanf("%d", &choice);
 
-                if(choice==4) break;
+                if (choice == 5)
+                    break;
 
-                if(choice==1) addCustomerOrder();
-                if(choice==2) workerViewOrders();
-                if(choice==3) viewProducts();
+                if (choice == 1)
+                    addCustomerOrder();
+                if (choice == 2)
+                    workerViewOrders();
+                if (choice == 3)
+                    viewProducts();
+                if (choice == 4)
+                    workerProcessOrder();
             }
         }
 
         /* FINANCE */
 
-        else if(currentUser->role==2)
+        else if (currentUser->role == 2)
         {
-            while(1)
+            while (1)
             {
                 printf("\nFINANCE MENU\n");
                 printf("1.View Orders\n");
@@ -396,14 +502,19 @@ int main()
                 printf("4.Make Payment\n");
                 printf("5.Logout\nChoice: ");
 
-                scanf("%d",&choice);
+                scanf("%d", &choice);
 
-                if(choice==5) break;
+                if (choice == 5)
+                    break;
 
-                if(choice==1) viewOrders();
-                if(choice==2) approveOrder();
-                if(choice==3) rejectOrder();
-                if(choice==4) makePayment();
+                if (choice == 1)
+                    viewOrders();
+                if (choice == 2)
+                    approveOrder();
+                if (choice == 3)
+                    rejectOrder();
+                if (choice == 4)
+                    makePayment();
             }
         }
     }
